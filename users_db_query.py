@@ -61,17 +61,33 @@ def changeHistory(id:int,history:int):
     except:
         print('error with change model')
 
+def selectHistory(id:int):
+    """вывод истории у пользователя"""
+    try:
+        conn=__connect()
+        cursor=conn.cursor()
+        if userNoExist(id): addUser(id) #if user doesn't exist, create user
+        cursor.execute('SELECT history FROM users WHERE uid=%s;', (id,))
+        result=cursor.fetchone()[0]
+        #print(result) #print int token
+        conn.close()
+        return result
+    except:
+        return {1,2,3}
 
 def token(id:int):
     """вывод количества токенов у пользователя"""
-    conn=__connect()
-    cursor=conn.cursor()
-    if userNoExist(id): addUser(id) #if user doesn't exist, create user
-    cursor.execute('SELECT token FROM users WHERE uid=%s;', (id,))
-    result=int(cursor.fetchone()[0])
-    #print(result) #print int token
-    conn.close()
-    return result
+    try:
+        conn=__connect()
+        cursor=conn.cursor()
+        if userNoExist(id): addUser(id) #if user doesn't exist, create user
+        cursor.execute('SELECT token FROM users WHERE uid=%s;', (id,))
+        result=int(cursor.fetchone()[0])
+        #print(result) #print int token
+        conn.close()
+        return result
+    except:
+        return 0
 
 def reduceTokens(id:int):
     """уменьшение количества токенов на 1"""

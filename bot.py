@@ -8,6 +8,7 @@ import places_db_query as places, users_db_query as users #файлы для б�
 import gpt #файл с чатои гпт
 import weather_forecast #погода по апи
 import distant #расчет расстояния
+import predict #предсказания
 
 bot=telebot.TeleBot('token')
 
@@ -100,19 +101,63 @@ def on_click_add_suggest(message):
   except:
     bot.send_message(message.chat.id, text="Упс... что-то пошло не так, попробуйте позже", reply_markup=types.ReplyKeyboardRemove())
     
+def on_click_add_predict(message):
+  try:
+    text=''
+    #print(message)
+    print(message.chat.id)
+    if(users.userNoExist(message.chat.id)):
+      users.addUser(message.chat.id)
+      text='Недостаточно объектов в избранном'
+      bot.send_message(message.chat.id, text=text, reply_markup=create_markup())
+    else:
+      bot.send_message(message.chat.id, '🧭Подбираем место, пожалуйста подождите...')
+      history=(users.selectHistory(message.chat.id))
+      #print(history)
+      result=predict.predict(history)
+      
+      time=result[0]
+      style=result[1]
+      persons=result[2]
+
+      arrPlaces=places.selectPlaces(time,style,persons)#array of places
+      if len(arrPlaces)==0: arrPlaces=places.selectPlaces(2,'парк',1)#array of places
+      result_tuple=arrPlaces[randrange(len(arrPlaces))]
+      result=places.place_dbToString(result_tuple)
+      result+="\n📃Описание: "+gpt.prompt(result_tuple[1])#генерация описания в чат гпт
+
+      loc=str(result_tuple[5]).split()#преобразование строки в координаты
+      latitude=float(loc[0])
+      longitude=float(loc[1])
+
+      keyboard = types.InlineKeyboardMarkup()
+      one_k = types.InlineKeyboardButton(text='Добавить в избранное', callback_data='f'+str(result_tuple[0]))#добавить в историю id
+      keyboard.add(one_k)
+      bot.send_message(message.chat.id, str(result),reply_markup=keyboard)#отправка описания
+
+      markup = create_markup()
+      bot.send_location(message.chat.id, latitude=latitude,longitude=longitude,reply_markup=markup)#отправка точки на карте
+
+  except:
+    bot.send_message(message.chat.id, text="Упс... что-то пошло не так, попробуйте позже", reply_markup=types.ReplyKeyboardRemove())
+
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def on_click_find_persons(call):
   try:
-    if call.data[0]=='f':
+    if call.data[0]=='p':
+      on_click_add_predict(call.message)
+
+    elif call.data[0]=='f':
       if(users.userNoExist(call.from_user.id)):
-        print(call)
-        print(call.from_user.id)
+        #print(call)
+        #print(call.from_user.id)
         users.addUser(call.from_user.id)
       else:
         history=int(call.data.replace('f','',1))
         users.changeHistory(call.from_user.id, history)
-        print(history)
+        #print(history)
       murkup=create_markup()
       bot.send_message(call.message.chat.id, 'Выбранное место добавлено в избранное', reply_markup=murkup)
     elif len(call.data)==1:
@@ -158,6 +203,8 @@ def on_click_find_persons(call):
 
       keyboard = types.InlineKeyboardMarkup()
       one_k = types.InlineKeyboardButton(text='Добавить в избранное', callback_data='f'+str(result_tuple[0]))#добавить в историю id
+      keyboard.add(one_k)
+      one_k = types.InlineKeyboardButton(text='Просмотреть предложения (в разработке)', callback_data='p'+str(result_tuple[0]))#добавить в историю id
       keyboard.add(one_k)
       bot.send_message(call.message.chat.id, str(result),reply_markup=keyboard)#отправка описания
 

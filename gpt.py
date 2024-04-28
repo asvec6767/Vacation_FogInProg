@@ -1,4 +1,5 @@
 from openai import OpenAI
+#openai.api_key='token' #openai, no money
 
 client = OpenAI(
     api_key="token", #proxy api
@@ -11,12 +12,12 @@ def prompt(place:str):
         model="gpt-3.5-turbo-1106",
         messages=[{"role": "user", "content": query}],
         temperature=0.7,
-        max_tokens=15,
+        max_tokens=150,
         n=1,
         stop=None
     )
     result = response.choices[0].message.content.__str__()
-    return result
+    return result[:result.rfind('.')]+'.'+'"'
 
 def prompt_distance_name(places):
     place=''.join(places)

@@ -32,6 +32,15 @@ def selectPlaces(time:int,style:str,persons:int):
     conn.close()
     return result
 
+def selectPlace_data(id:int):
+    """вывлд параметров места по id"""
+    conn=__connect("postgres")
+    cursor=conn.cursor()
+    cursor.execute("SELECT time,style,persons FROM places WHERE id=%s;",(id,))
+    result=cursor.fetchall()
+    conn.close()
+    return result[0]
+
 def addSuggest(name:str):
     """Добавление пользовательского места отдыха в базу данных в таблицу предложений"""
     try:
