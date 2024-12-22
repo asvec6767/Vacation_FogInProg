@@ -49,7 +49,7 @@ def _dist_to_string(place, dist):
 
     for i in range(0,count,+1):
         result+=places.place_dbToString(place[i])
-        result+='\n🌐Адрес: '+geocoder.get_adress(float(str(place[i][5]).split()[0]),float(str(place[i][5]).split()[1]))
+        #result+='\n🌐Адрес: '+geocoder.get_adress(float(str(place[i][5]).split()[0]),float(str(place[i][5]).split()[1]))
         if i+1<count:
             result+=f'\n\nВремя на дорогу между пунктами {i+1} и {i+2}: '
             if dist[i]<=2:
@@ -90,11 +90,3 @@ def _create_detail_distance(time:int,count:int):
     result=_dist_to_string(place,dist)
 
     return result
-
-
-
-
-
-
-   
-
